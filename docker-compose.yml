@@ -1,0 +1,78 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak-idp
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
+    ports:
+      - "8080:8080"
+    command: start-dev
+    depends_on:
+      - postgres
+    networks:
+      - idp-network
+
+  postgres:
+    image: postgres:13
+    container_name: postgres-idp
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - idp-network
+
+  redis:
+    image: redis:latest
+    container_name: redis-idp
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - idp-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-idp
+    ports:
+      - "2900:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - idp-network
+    depends_on:
+      - tempo
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo-idp
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+      - ./tempo-data:/var/tempo
+    ports:
+      - "3200:3200" # tempo
+      - "4317:4317" # otlp grpc
+      - "4318:4318" # otlp http
+    networks:
+      - idp-network
+    environment:
+      - TEMPO_OTLP_HTTP_ENDPOINT=localhost:4318
+      - TEMPO_OTLP_GRPC_ENDPOINT=localhost:4317
+
+volumes:
+  postgres_data:
+  redis_data:
+  grafana_data:
+
+networks:
+  idp-network:
+    driver: bridge

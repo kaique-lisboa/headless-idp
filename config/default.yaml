@@ -1,0 +1,49 @@
+redis:
+  url: "{REDIS_URL}"
+
+port: "{PORT}"
+hostname: http://localhost:3000
+
+tenants:
+  - id: "default"
+    name: "Default Tenant"
+    oidc_config:
+      jwt_secret: "{JWT_SECRET}"
+    auth_provider:
+      type: "keycloak"
+      url: "http://localhost:8080"
+      realm: "test"
+      client_id: "test"
+      client_secret: "{KEYCLOAK_SECRET}"
+    oidc_clients:
+      - client_id: "webapp-client"
+        client_secret: "{WEBAPP_SECRET}"
+        redirect_uris:
+          - "https://httpbin.org/get"
+        session_expiration_time: 20000
+        jwt_expiration_time: 20000
+
+  - id: "test"
+    name: "Test Tenant"
+    oidc_config:
+      jwt_secret: "{JWT_SECRET}"
+    auth_provider:
+      type: "test"
+      users:
+        - name: "Test User"
+          username: "test"
+          email: "test@test.com"
+          password: "test"
+          id: test_id
+        - name: "John Doe"
+          email: "john@doe.com"
+          username: "john"
+          password: "password123"
+          id: john_id
+    oidc_clients:
+      - client_id: "test-client"
+        client_secret: "test-secret"
+        redirect_uris:
+          - "https://httpbin.org/get"
+        session_expiration_time: 20000
+        jwt_expiration_time: 20000 

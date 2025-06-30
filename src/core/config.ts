@@ -1,4 +1,4 @@
-import { Static, Type } from "@sinclair/typebox";
+import { Static } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import dotenv from 'dotenv';
 import pupa, { MissingValueError } from 'pupa';
@@ -6,7 +6,6 @@ import { logger } from "@/core/logger";
 import { t } from "elysia";
 
 dotenv.config();
-;
 
 const baseConfigSchema = t.Object({
   redis: t.Object({
@@ -40,6 +39,7 @@ const baseConfigSchema = t.Object({
     oidc_clients: t.Array(t.Object({
       client_id: t.String(),
       client_secret: t.String(),
+      allowed_scopes: t.Array(t.String()),
       redirect_uris: t.Array(t.String()),
       session_expiration_time: t.Number(),
       jwt_expiration_time: t.Number(),

@@ -13,7 +13,7 @@ export const oidcClientMiddleware = new Elysia({ name: 'oidcClient' })
     schema: 'standalone',
     query: querySchema
   })
-  .resolve(async ({ query, tenant, authState }) => {
+  .resolve(async ({ query, tenant, authState, logger }) => {
     let { client_id } = query as Static<typeof querySchema>;
 
     if (authState.version === 1 && authState.auth.step !== 'idle') {

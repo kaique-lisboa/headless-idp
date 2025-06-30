@@ -3,7 +3,7 @@ import Elysia, { status, t } from "elysia";
 import { match, P } from "ts-pattern";
 import { loggerMiddleware } from "@/core/logger";
 import { userAuthState } from "@/middlewares/session/sessionMiddleware";
-import { userCredsMatch } from "@/middlewares/session/sessionStateTransitions";
+import { userAuthenticated, userCredsMatch } from "@/middlewares/session/sessionStateTransitions";
 import { tenantMiddleware } from "@/middlewares/tenant";
 import { KeycloakAuthService } from "@/services/keycloakAuthService";
 import { redirectToRedirect } from "@/utils/redirects";
@@ -46,18 +46,28 @@ export const v1LoginRouter = new Elysia({ name: 'v1LoginRouter', })
 
               const decoded = authService.decodeToken(response.access_token);
 
-              await setAuthState({
+              const newState = await setAuthState({
                 auth: userCredsMatch(
                   authState.auth, { enabled: false, type: 'none' }, {
                   email: decoded.email,
                   name: decoded.name,
                   id: decoded.sub,
+                  permissions: decoded.scope.split(' '),
                 }, {
                   provider: 'keycloak',
                   type: 'oidc',
                   passwordGrant: response
                 })
               });
+
+              if (true) { // Validate if there's more to do with that user such as validate MFA
+                await setAuthState({
+                  auth: userAuthenticated(
+                    newState.auth
+                  )
+                });
+              }
+
               return redirectToRedirect(tenant.id);
             })
             .with({ auth_provider: { type: 'test' } }, async (config) => {
@@ -75,14 +85,22 @@ export const v1LoginRouter = new Elysia({ name: 'v1LoginRouter', })
                 })
               }
 
-              await setAuthState({
+              const newState = await setAuthState({
                 auth: userCredsMatch(
                   authState.auth, { enabled: false, type: 'none' }, {
                   email: user.email,
                   name: user.name,
                   id: user.id,
+                  permissions: [], // TODO: Add permissions to the user
                 }, null)
               });
+
+              await setAuthState({
+                auth: userAuthenticated(
+                  newState.auth
+                )
+              });
+
               return redirectToRedirect(tenant.id);
             })
             .exhaustive()

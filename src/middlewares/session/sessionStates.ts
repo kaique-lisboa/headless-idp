@@ -4,6 +4,7 @@ export type User = {
   id: string;
   name: string;
   email: string;
+  permissions: string[];
 }
 
 export type OAuthParams = {
@@ -27,6 +28,8 @@ export type AuthState = {
   version: 1,
   auth: AuthStateV1
 }
+
+export type TokenEligibleState = AuthState & { auth: AuthStates.UserAuthenticated }
 
 export type ExternalAuthState = {
   provider: 'keycloak',
@@ -70,6 +73,7 @@ export namespace AuthStates {
       authorizeParams: OAuthParams,
       user: User,
       mfa: MFA,
+      externalAuth: ExternalAuthState,
     }
   }
 }

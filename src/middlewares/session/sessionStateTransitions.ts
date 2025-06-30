@@ -15,8 +15,10 @@ export function userIdentified(
   user: User
 ): AuthStates.UserIdentified {
   return {
+    ...currentState,
     step: 'user_identified',
     state: {
+      ...currentState.state,
       authorizeParams: currentState.state.authorizeParams,
       user
     }
@@ -29,8 +31,10 @@ export function userIdentifiedCredsMatched(
   externalAuth: ExternalAuthState = null
 ): AuthStates.UserCredsMatch {
   return {
+    ...currentState,
     step: 'user_creds_match',
     state: {
+      ...currentState.state,
       authorizeParams: currentState.state.authorizeParams,
       user: currentState.state.user,
       mfa,
@@ -48,6 +52,7 @@ export function userCredsMatch(
   return {
     step: 'user_creds_match',
     state: {
+      ...currentState.state,
       authorizeParams: currentState.state.authorizeParams,
       user,
       mfa,
@@ -60,12 +65,8 @@ export function userAuthenticated(
   currentState: AuthStates.UserCredsMatch
 ): AuthStates.UserAuthenticated {
   return {
+    ...currentState,
     step: 'user_authenticated',
-    state: {
-      authorizeParams: currentState.state.authorizeParams,
-      user: currentState.state.user,
-      mfa: currentState.state.mfa
-    }
   };
 }
 

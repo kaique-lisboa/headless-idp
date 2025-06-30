@@ -1,0 +1,7 @@
+[test]
+coverageReporter = ["text", "lcov"]
+coverage = true
+coverageSkipTestFiles = true
+coverageThreshold = 0.9
+coverageDir = "./coverage"
+preload = ["./src/test/preload.test"]

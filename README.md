@@ -118,6 +118,7 @@ After running `docker-compose up -d`, the following services will be available:
   - [ ] `/token`
     - [x] `authorization_code`
     - [ ] `refresh_token`
+  - [ ] `/userinfo`
   - [ ] `.well-known`
     - [ ] `/.well-known/jwks.json`
     - [ ] `/.well-known/openid-configuration`

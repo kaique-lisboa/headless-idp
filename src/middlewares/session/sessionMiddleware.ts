@@ -34,7 +34,7 @@ export const userAuthState = new Elysia({ name: 'userAuthState' })
     const authState = await sessionService.getOrCreateSession(sessionId);
     return {
       authState,
-      setAuthState: async (state: Partial<AuthState>, expiresIn?: number) => {
+      setAuthState: async <T extends Partial<AuthState>>(state: T, expiresIn?: number) => {
         await sessionService.setSession(sessionId, state, expiresIn);
         return state;
       }

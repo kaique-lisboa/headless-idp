@@ -23,6 +23,11 @@ tenants:
         session_expiration_time: 20000
         code_expiration_time: 20000
         jwt_expiration_time: 20000
+        allowed_scopes:
+          - "oidc" 
+          - "profile" 
+          - "email" 
+          - "phone" 
 
   - id: "test"
     name: "Test Tenant"
@@ -49,3 +54,8 @@ tenants:
         session_expiration_time: 20000
         code_expiration_time: 20000
         jwt_expiration_time: 20000 
+        allowed_scopes:
+          - "oidc" 
+          - "profile" 
+          - "email" 
+          - "phone" 

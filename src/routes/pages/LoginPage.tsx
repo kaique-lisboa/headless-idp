@@ -10,7 +10,7 @@ export function LoginPage(props: LoginPageProps) {
   return <html>
     <body>
       <h1>Login</h1>
-      <form action="/flow/v1/login" method="post">
+      <form method="post">
         <label for="email">Email</label>
         <input id="email" type="email" name="email" />
         <br />

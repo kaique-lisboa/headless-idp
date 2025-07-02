@@ -132,7 +132,7 @@ export class TokenService {
   }
 
   async createAuthCode(sessionId: string) {
-    const state = await this.sessionService.getSession(sessionId);
+    const state = await this.sessionService.getSession(sessionId, this.tenantConfig.id);
     this.validateStateForTokenCreation(state);
     const oidcClientConfig = this.getOidcConfig(state);
     const authCode = crypto.randomUUID();

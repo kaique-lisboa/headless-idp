@@ -42,6 +42,7 @@ const baseConfigSchema = t.Object({
       allowed_scopes: t.Array(t.String()),
       redirect_uris: t.Array(t.String()),
       session_expiration_time: t.Number(),
+      code_expiration_time: t.Number(),
       jwt_expiration_time: t.Number(),
     })),
   })),

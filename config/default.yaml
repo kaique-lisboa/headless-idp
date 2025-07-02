@@ -21,6 +21,7 @@ tenants:
         redirect_uris:
           - "https://httpbin.org/get"
         session_expiration_time: 20000
+        code_expiration_time: 20000
         jwt_expiration_time: 20000
 
   - id: "test"
@@ -46,4 +47,5 @@ tenants:
         redirect_uris:
           - "https://httpbin.org/get"
         session_expiration_time: 20000
+        code_expiration_time: 20000
         jwt_expiration_time: 20000 

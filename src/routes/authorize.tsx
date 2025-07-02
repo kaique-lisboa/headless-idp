@@ -30,17 +30,14 @@ export const authRouter = new Elysia()
 
       return match(state)
         .with({ version: 1, auth: { step: P.union('initiate_login', 'idle') } }, async () => {
-
           await setAuthState({
             version: 1,
-            auth: initiateLogin(query),
+            auth: initiateLogin(query, tenant.id),
           }, oidcClient.session_expiration_time);
 
           return redirectToLogin(tenant.id);
         })
-        .with({ version: 1, auth: { step: 'user_creds_match' } }, async (authState) => {
-
-
+        .with({ version: 1, auth: { step: 'user_authenticated' } }, async (authState) => {
           await setAuthState({
             version: 1,
             auth: {
@@ -57,13 +54,13 @@ export const authRouter = new Elysia()
               await setAuthState(
                 {
                   version: 1,
-                  auth: initiateLogin(query)
+                  auth: initiateLogin(query, tenant.id)
                 }
               );
               return redirectToLogin(tenant.id);
             })
             .with('consent', () => {
-              // TODO: Implement select account flow
+              // TODO: Implement consent account flow
               return status(422, {
                 message: 'Unsupported prompt: consent'
               })

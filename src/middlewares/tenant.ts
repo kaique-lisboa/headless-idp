@@ -13,5 +13,10 @@ export const tenantMiddleware = new Elysia({ name: 'tenant' })
     if (!tenant) {
       return status(404, 'Tenant not found');
     }
-    return { tenant };
+
+    const getOidcClient = (clientId: string) => {
+      return tenant.oidc_clients.find(client => client.client_id === clientId);
+    }
+
+    return { tenant, getOidcClient };
   }).as('scoped');

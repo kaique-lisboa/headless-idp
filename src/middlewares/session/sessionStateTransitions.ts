@@ -1,11 +1,12 @@
 import { OAuthParams, AuthStates, User, MFA, ExternalAuthState } from "@/middlewares/session/sessionStates";
 
 // Transition functions
-export function initiateLogin(params: OAuthParams): AuthStates.InitiateLogin {
+export function initiateLogin(params: OAuthParams, tenantId: string): AuthStates.InitiateLogin {
   return {
     step: 'initiate_login',
     state: {
-      authorizeParams: params
+      authorizeParams: params,
+      tenantId
     }
   };
 }

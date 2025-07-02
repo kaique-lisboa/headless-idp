@@ -46,6 +46,7 @@ export namespace AuthStates {
     step: 'initiate_login',
     state: {
       authorizeParams: OAuthParams,
+      tenantId: string,
     }
   }
 
@@ -54,6 +55,7 @@ export namespace AuthStates {
     state: {
       authorizeParams: OAuthParams,
       user: User,
+      tenantId: string,
     }
   }
 
@@ -64,6 +66,7 @@ export namespace AuthStates {
       user: User,
       mfa: MFA,
       externalAuth: ExternalAuthState,
+      tenantId: string,
     }
   }
 
@@ -74,6 +77,7 @@ export namespace AuthStates {
       user: User,
       mfa: MFA,
       externalAuth: ExternalAuthState,
+      tenantId: string,
     }
   }
 }

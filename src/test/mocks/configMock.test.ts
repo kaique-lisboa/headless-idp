@@ -27,6 +27,7 @@ export const keycloakTenantConfig = {
         "profile"
       ],
       "session_expiration_time": 20000,
+      "code_expiration_time": 20000,
       "jwt_expiration_time": 20000
     }
   ]
@@ -70,6 +71,7 @@ export const testTenantConfig = {
         "profile"
       ],
       "session_expiration_time": 20000,
+      "code_expiration_time": 20000,
       "jwt_expiration_time": 20000
     }
   ]

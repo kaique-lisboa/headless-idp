@@ -1,9 +1,11 @@
 import { AuthState, AuthStates } from "@/middlewares/session/sessionStates";
+import { testTenantConfig } from "./configMock.test";
 
 export const authenticatedState = {
   version: 1,
   auth: {
     state: {
+      tenantId: testTenantConfig.id,
       authorizeParams: {
         redirect_uri: "http://localhost:3000/callback",
         scope: "openid profile email",

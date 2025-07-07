@@ -1,4 +1,4 @@
-import { OAuthParams, AuthStates, User, MFA, ExternalAuthState } from "@/middlewares/session/sessionStates";
+import { OAuthParams, AuthStates, User, MFA, ExternalAuthState, AuthState, AuthStateV1 } from "@/middlewares/session/sessionStates";
 
 // Transition functions
 export function initiateLogin(params: OAuthParams, tenantId: string): AuthStates.InitiateLogin {
@@ -9,6 +9,22 @@ export function initiateLogin(params: OAuthParams, tenantId: string): AuthStates
       tenantId
     }
   };
+}
+
+export function updateAuthorizeParams<T extends AuthState<Exclude<AuthStateV1, AuthStates.Idle>>>(
+  currentState: T,
+  params: OAuthParams
+): T {
+  return {
+    version: 1,
+    auth: {
+      ...currentState.auth,
+      state: {
+        ...currentState.auth.state,
+        authorizeParams: params,
+      }
+    }
+  } as T;
 }
 
 export function userIdentified(

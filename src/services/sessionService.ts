@@ -16,7 +16,7 @@ export class SessionService {
     return `session:${sessionId}`;
   }
 
-  private createEmptyState(): AuthState {
+  static createEmptyState(): AuthState {
     return {
       version: 1,
       auth: {
@@ -31,7 +31,7 @@ export class SessionService {
       this.verifyTenantMismatch(JSON.parse(sessionRaw) as AuthState, tenantId);
       return JSON.parse(sessionRaw) as AuthState;
     }
-    return this.createEmptyState();
+    return SessionService.createEmptyState();
   }
 
   async getOrCreateSession(sessionId: string, tenantId: string, expiresIn: number) {
@@ -45,7 +45,7 @@ export class SessionService {
       return JSON.parse(sessionRaw) as AuthState;
     }
 
-    const sessionState = this.createEmptyState();
+    const sessionState = SessionService.createEmptyState();
     sessionRaw = JSON.stringify(sessionState);
     await this.client.set(this.getSessionKey(sessionId), sessionRaw, {
       EX: expiresIn,
@@ -60,9 +60,9 @@ export class SessionService {
     }
   }
 
-  async setSession(sessionId: string, state: Partial<AuthState>, expiresIn?: number) {
+  async setSession<T extends Partial<AuthState>>(sessionId: string, state: T, expiresIn?: number) {
     const cachedState = await this.client.get(`session:${sessionId}`);
-    let authState = cachedState ? JSON.parse(cachedState) as AuthState : this.createEmptyState();
+    const authState = cachedState ? JSON.parse(cachedState) as AuthState : SessionService.createEmptyState();
     const newState = { ...authState, ...state };
     let ttl = await this.client.ttl(this.getSessionKey(sessionId));
 
@@ -70,7 +70,7 @@ export class SessionService {
       this.getSessionKey(sessionId),
       JSON.stringify(newState),
       { expiration: { type: 'EX', value: expiresIn ?? ttl } });
-    return authState;
+    return newState;
   }
 
 }

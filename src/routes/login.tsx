@@ -5,27 +5,27 @@ import { loggerMiddleware } from "@/core/logger";
 import { userAuthState } from "@/middlewares/session/sessionMiddleware";
 import { userAuthenticated, userCredsMatch } from "@/middlewares/session/sessionStateTransitions";
 import { tenantMiddleware } from "@/middlewares/tenant";
-import { KeycloakAuthService } from "@/services/keycloakAuthService";
-import { redirectToRedirect } from "@/utils/redirects";
+import { OauthPassGrantAuthService } from "@/services/passwordGrantAuthService";
+import { redirectToV1Mfa, redirectWithSuccess } from "@/utils/redirects";
 import { LoginPage } from "@/routes/pages/LoginPage";
+import { AuthState, AuthStates } from '@/middlewares/session/sessionStates';
 
 export const v1LoginRouter = new Elysia({ name: 'v1LoginRouter', })
   .use(loggerMiddleware)
   .use(html())
-  .group('/:tenantId/flow/v1', app => app
+  .group('/:tenantId/v1/flow', app => app
     .use(tenantMiddleware)
     .use(userAuthState)
-    .get('/login', ({ authState, logger }) => {
+    .get('/login', ({ requestAuthState: authState }) => {
 
-      if (authState.version !== 1 || authState.auth.step !== 'initiate_login') {
-        return status(400, {
+      return match(authState)
+        .with({ version: 1, auth: { step: 'idle' } }, () => status(400, {
           message: 'Invalid session state'
-        })
-      }
+        }))
+        .otherwise(() => <LoginPage state={authState.auth} />)
 
-      return <LoginPage state={authState.auth} />;
     })
-    .post('/login', async ({ authState, setAuthState, body, set, tenant }) => {
+    .post('/login', async ({ requestAuthState: authState, setAuthState, body, set, tenant }) => {
 
       return match(authState)
         // Matches with Valid state
@@ -33,8 +33,8 @@ export const v1LoginRouter = new Elysia({ name: 'v1LoginRouter', })
 
           // Matches with Valid config
           return match(tenant)
-            .with({ auth_provider: { type: 'keycloak' } }, async (tenant) => {
-              const authService = new KeycloakAuthService(tenant);
+            .with({ auth_provider: { type: 'oauth_password_grant' } }, async (tenant) => {
+              const authService = new OauthPassGrantAuthService(tenant);
               const [response, error] = await authService.passwordGrant(body.email, body.password)
                 .then(token => [token, null] as const)
                 .catch(err => [null, err] as const);
@@ -46,7 +46,7 @@ export const v1LoginRouter = new Elysia({ name: 'v1LoginRouter', })
 
               const decoded = authService.decodeToken(response.access_token);
 
-              const newState = await setAuthState({
+              let newState: AuthState<AuthStates.UserCredsMatch | AuthStates.UserAuthenticated> = await setAuthState({
                 auth: userCredsMatch(
                   authState.auth, { enabled: false, type: 'none' }, {
                   email: decoded.email,
@@ -61,14 +61,16 @@ export const v1LoginRouter = new Elysia({ name: 'v1LoginRouter', })
               });
 
               if (true) { // Validate if there's more to do with that user such as validate MFA
-                await setAuthState({
+                newState = await setAuthState({
                   auth: userAuthenticated(
-                    newState.auth
+                    newState.auth as AuthStates.UserCredsMatch
                   )
                 });
+              } else {
+                return redirectToV1Mfa(tenant.id);
               }
 
-              return redirectToRedirect(tenant.id);
+              return await redirectWithSuccess(tenant, newState);
             })
             .with({ auth_provider: { type: 'test' } }, async (config) => {
 
@@ -85,7 +87,7 @@ export const v1LoginRouter = new Elysia({ name: 'v1LoginRouter', })
                 })
               }
 
-              const newState = await setAuthState({
+              const credsMatchState = await setAuthState({
                 auth: userCredsMatch(
                   authState.auth, { enabled: false, type: 'none' }, {
                   email: user.email,
@@ -95,13 +97,13 @@ export const v1LoginRouter = new Elysia({ name: 'v1LoginRouter', })
                 }, null)
               });
 
-              await setAuthState({
+              const newState = await setAuthState({
                 auth: userAuthenticated(
-                  newState.auth
+                  credsMatchState.auth
                 )
               });
 
-              return redirectToRedirect(tenant.id);
+              return redirectWithSuccess(tenant, newState);
             })
             .exhaustive()
 
@@ -115,3 +117,5 @@ export const v1LoginRouter = new Elysia({ name: 'v1LoginRouter', })
         password: t.String(),
       })
     }))
+
+

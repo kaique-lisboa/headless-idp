@@ -20,9 +20,8 @@ const baseConfigSchema = t.Object({
       jwt_secret: t.String(),
     }),
     auth_provider: t.Union([t.Object({
-      type: t.Literal('keycloak'),
+      type: t.Literal('oauth_password_grant'),
       url: t.String(),
-      realm: t.String(),
       client_id: t.String(),
       client_secret: t.String(),
     }),
@@ -64,4 +63,5 @@ try {
 
 export const config = Value.Parse(baseConfigSchema, JSON.parse(configWithEnvs));
 export type Config = Static<typeof baseConfigSchema>
-
+export type TenantConfig = Config['tenants'][number]
+export type OidcClientConfig = TenantConfig['oidc_clients'][number]

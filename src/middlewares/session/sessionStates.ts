@@ -1,4 +1,4 @@
-import { PasswordGrantResponse } from "@/services/keycloakAuthService";
+import { PasswordGrantResponse } from "@/services/passwordGrantAuthService";
 
 export type User = {
   id: string;
@@ -13,6 +13,7 @@ export type OAuthParams = {
   client_id: string,
   code_challenge: string,
   code_challenge_method: string,
+  state?: string,
 }
 
 export type UserIdentified = {
@@ -24,9 +25,9 @@ export type MFA = {
   type: string,
 }
 
-export type AuthState = {
+export type AuthState<T extends AuthStateV1 = AuthStateV1> = {
   version: 1,
-  auth: AuthStateV1
+  auth: T
 }
 
 export type TokenEligibleState = AuthState & { auth: AuthStates.UserAuthenticated }

@@ -113,7 +113,7 @@ After running `docker-compose up -d`, the following services will be available:
 
 ## Roadmap
 
-- [ ] Create automated tests
+- [x] Create automated tests
 - [ ] Implement core OIDC
   - [ ] `/token`
     - [x] `authorization_code`
@@ -122,7 +122,7 @@ After running `docker-compose up -d`, the following services will be available:
   - [ ] `.well-known`
     - [ ] `/.well-known/jwks.json`
     - [ ] `/.well-known/openid-configuration`
-- [ ] Change "keycloak integration" to generic OAuth password grant integration
+- [x] Change "keycloak integration" to generic OAuth password grant integration
 - [ ] Support internal authentication and user management (self contained)
 - [ ] Support MFA
   - [ ] Native MFA

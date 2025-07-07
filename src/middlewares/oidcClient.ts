@@ -13,7 +13,7 @@ export const oidcClientMiddleware = new Elysia({ name: 'oidcClient' })
     schema: 'standalone',
     query: querySchema
   })
-  .resolve(async ({ query, tenant, authState, logger }) => {
+  .resolve(async ({ query, tenant, requestAuthState: authState, logger }) => {
     let { client_id } = query as Static<typeof querySchema>;
 
     if (authState.version === 1 && authState.auth.step !== 'idle') {
@@ -25,5 +25,5 @@ export const oidcClientMiddleware = new Elysia({ name: 'oidcClient' })
       return { oidcClient };
     }
 
-    return status(404, `OIDC client "${query.client_id}" not found`);
+    return status(400, `OIDC client "${query.client_id}" not found`);
   }).as('scoped');

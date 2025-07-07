@@ -1,16 +1,16 @@
 import Elysia, { status, t } from "elysia";
 import { loggerMiddleware } from "@/core/logger";
 import { oidcClientMiddleware } from "@/middlewares/oidcClient";
-import { TokenService } from "@/services/oauthOidcService";
+import { OauthOIDCService } from "@/services/oauthOidcService";
 import { tenantMiddleware } from "@/middlewares/tenant";
 
-export const tokenRouter = new Elysia({ name: 'tokenRouter' })
+export const v1TokenRouter = new Elysia({ name: 'tokenRouter' })
   .use(loggerMiddleware)
-  .group('/:tenantId', app => app
+  .group('/:tenantId/v1', app => app
     .use(tenantMiddleware)
     .post('/token', async ({ body: { code, code_verifier }, tenant }) => {
 
-      const oidcService = new TokenService(tenant);
+      const oidcService = new OauthOIDCService(tenant);
 
       const [token, error] = await oidcService.createToken(code, code_verifier)
         .then(token => [token, null] as const)

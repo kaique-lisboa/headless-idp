@@ -4,6 +4,7 @@ import { sessionMiddleware } from "@/services/sessionService";
 import { AuthState } from "@/middlewares/session/sessionStates";
 import { tenantMiddleware } from "@/middlewares/tenant";
 import { AppError } from "@/core/errors";
+import { Prettify2 } from "elysia/dist/types";
 
 export const session = new Elysia({ name: 'session' })
   .use(loggerMiddleware)
@@ -34,12 +35,10 @@ export const userAuthState = new Elysia({ name: 'userAuthState' })
   .use(tenantMiddleware)
   .resolve(async ({ sessionId, sessionService, tenant, getOidcClient, query }) => {
     try {
-      const authState = await sessionService.getSession(sessionId, tenant.id)
       return {
-        authState,
-        setAuthState: async <T extends Partial<AuthState>>(state: T, expiresIn?: number) => {
-          await sessionService.setSession(sessionId, state, expiresIn);
-          return state;
+        requestAuthState: await sessionService.getSession(sessionId, tenant.id),
+        setAuthState: <T extends Partial<AuthState>>(state: T, expiresIn?: number) => {
+          return sessionService.setSession(sessionId, state, expiresIn) as Prettify2<AuthState & T>;;
         }
       }
     } catch (e) {

@@ -7,7 +7,7 @@ import { AuthState, TokenEligibleState } from "@/middlewares/session/sessionStat
 import { Config, config as configImport } from "@/core/config";
 import { SessionService, sessionService as sessionServiceImport } from "@/services/sessionService";
 
-export class TokenService {
+export class OauthOIDCService {
 
   private readonly oidcOnlyScopes = new Set(['openid', 'email', 'profile', 'phone', 'address', 'offline_access']);
 
@@ -66,7 +66,7 @@ export class TokenService {
 
   private validateStateForTokenCreation(state?: AuthState | null): asserts state is TokenEligibleState {
     if (state?.version !== 1 || (state?.auth.step !== 'user_authenticated')) {
-      throw new Error('Invalid auth code');
+      throw new Error('Invalid state for token creation');
     }
   }
 
@@ -133,6 +133,10 @@ export class TokenService {
 
   async createAuthCode(sessionId: string) {
     const state = await this.sessionService.getSession(sessionId, this.tenantConfig.id);
+    return this.createAuthCodeFromState(state);
+  }
+
+  async createAuthCodeFromState(state: AuthState) {
     this.validateStateForTokenCreation(state);
     const oidcClientConfig = this.getOidcConfig(state);
     const authCode = crypto.randomUUID();
@@ -142,6 +146,5 @@ export class TokenService {
     });
 
     return authCode;
-
   }
 }

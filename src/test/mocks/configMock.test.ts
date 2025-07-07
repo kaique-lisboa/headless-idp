@@ -1,4 +1,4 @@
-import { type Config } from "@/core/config";
+import { TenantConfig, type Config } from "@/core/config";
 
 
 export const keycloakTenantConfig = {
@@ -8,9 +8,8 @@ export const keycloakTenantConfig = {
     "jwt_secret": "test"
   },
   "auth_provider": {
-    "type": "keycloak",
+    "type": "oauth_password_grant",
     "url": "http://localhost:8080",
-    "realm": "test",
     "client_id": "test",
     "client_secret": "test"
   },
@@ -31,7 +30,7 @@ export const keycloakTenantConfig = {
       "jwt_expiration_time": 20000
     }
   ]
-} as const satisfies Config['tenants'][number];
+} as const satisfies TenantConfig;
 
 export const testTenantConfig = {
   "id": "test",
@@ -75,7 +74,7 @@ export const testTenantConfig = {
       "jwt_expiration_time": 20000
     }
   ]
-} as const satisfies Config['tenants'][number];
+} as const satisfies TenantConfig
 
 export const configMock = {
   tenants: [

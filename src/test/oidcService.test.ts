@@ -1,4 +1,4 @@
-import { TokenService } from "../services/oauthOidcService";
+import { OauthOIDCService } from "../services/oauthOidcService";
 import { configMock, testTenantConfig } from "./mocks/configMock.test";
 import { RedisClientType } from "@redis/client";
 import { redisClientMock, asRedisClient } from "./mocks/redisClientMock.test";
@@ -8,12 +8,12 @@ import { SessionService } from "@/services/sessionService";
 
 describe("oidcService", () => {
 
-  let oidcService: TokenService;
+  let oidcService: OauthOIDCService;
   let redisClient: RedisClientType;
 
   beforeEach(() => {
     redisClient = asRedisClient(redisClientMock);
-    oidcService = new TokenService(
+    oidcService = new OauthOIDCService(
       testTenantConfig,
       configMock,
       redisClient,

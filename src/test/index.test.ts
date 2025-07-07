@@ -7,6 +7,7 @@ import { sessionService } from '@/services/sessionService';
 import app from "@/app";
 import { createHash } from 'crypto';
 import { authenticatedState } from './mocks/authStateMocks.test';
+import { AuthState } from '@/middlewares/session/sessionStates';
 
 describe("App", () => {
 
@@ -29,12 +30,12 @@ describe("App", () => {
       code_challenge: codeChallenge
     });
     // Authorize
-    const response = await app.handle(new Request(`http://localhost/${testTenantConfig.id}/authorize?${query.toString()}`));
+    const response = await app.handle(new Request(`http://localhost/${testTenantConfig.id}/v1/authorize?${query.toString()}`));
     expect(response.status).toBe(302);
     const sessionId = response.headers.get("Set-Cookie")?.split(';')[0].split('=')[1];
     expect(sessionId).toBeDefined();
     let location = response.headers.get("Location");
-    expect(location).toBe('/test/flow/v1/login');
+    expect(location).toBe('/test/v1/flow/login');
 
     // Login
     const loginResponse = await app.handle(new Request(`http://localhost${location}`, {
@@ -50,24 +51,12 @@ describe("App", () => {
     }));
     expect(loginResponse.status).toBe(302);
     location = loginResponse.headers.get("Location");
-    expect(location).toBe('/test/flow/v1/redirect');
-
-    // Redirect
-    const redirectResponse = await app.handle(new Request(`http://localhost${location}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': `session=${sessionId}`
-      },
-    }));
-    console.log(await redirectResponse.text());
-    expect(redirectResponse.status).toBe(302);
-    location = redirectResponse.headers.get("Location");
     expect(location).toContain(testTenantConfig.oidc_clients[0].redirect_uris[0]);
     const code = new URLSearchParams(location?.split('?')[1]).get('code');
     expect(code).toBeDefined();
 
     // Token
-    const tokenResponse = await app.handle(new Request(`http://localhost/${testTenantConfig.id}/token`, {
+    const tokenResponse = await app.handle(new Request(`http://localhost/${testTenantConfig.id}/v1/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -86,60 +75,116 @@ describe("App", () => {
     expect(token.token_type).toBe('Bearer');
   });
 
-  test("should skip login if user is already authenticated", async () => {
-    const sessionId = crypto.randomUUID();
-    await sessionService.setSession(sessionId, authenticatedState, testTenantConfig.oidc_clients[0].session_expiration_time)
+  describe("Authenticated sessions", () => {
 
-    const codeVerifier = "test_verifier"
-    const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+    test("should skip login if user is already authenticated", async () => {
+      const sessionId = crypto.randomUUID();
+      await sessionService.setSession(sessionId, authenticatedState, testTenantConfig.oidc_clients[0].session_expiration_time)
 
-    const query = new URLSearchParams({
-      client_id: testTenantConfig.oidc_clients[0].client_id,
-      redirect_uri: testTenantConfig.oidc_clients[0].redirect_uris[0],
-      response_type: "code",
-      scope: "openid profile email",
-      state: "test",
-      code_challenge_method: "S256",
-      code_challenge: codeChallenge,
+      const codeVerifier = "test_verifier"
+      const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+
+      const query = new URLSearchParams({
+        client_id: testTenantConfig.oidc_clients[0].client_id,
+        redirect_uri: testTenantConfig.oidc_clients[0].redirect_uris[0],
+        response_type: "code",
+        scope: "openid profile email",
+        state: "test",
+        code_challenge_method: "S256",
+        code_challenge: codeChallenge,
+      });
+
+      const response = await app.handle(new Request(`http://localhost/${testTenantConfig.id}/v1/authorize?${query.toString()}`, {
+        headers: {
+          'Cookie': `session=${sessionId}`
+        }
+      }));
+      expect(response.status).toBe(302);
+      let location = response.headers.get("Location");
+      expect(location).toContain(testTenantConfig.oidc_clients[0].redirect_uris[0]);
+      const code = new URLSearchParams(location?.split('?')[1]).get('code');
+      expect(code).toBeDefined();
     });
 
-    const response = await app.handle(new Request(`http://localhost/${testTenantConfig.id}/authorize?${query.toString()}`, {
+    test("should not skip login if user is authenticated but prompt is login", async () => {
+      const sessionId = crypto.randomUUID();
+      await sessionService.setSession(sessionId, authenticatedState, testTenantConfig.oidc_clients[0].session_expiration_time)
+
+      const codeVerifier = "test_verifier"
+      const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+
+      const query = new URLSearchParams({
+        client_id: testTenantConfig.oidc_clients[0].client_id,
+        redirect_uri: testTenantConfig.oidc_clients[0].redirect_uris[0],
+        response_type: "code",
+        scope: "openid profile email",
+        state: "test",
+        prompt: "login",
+        code_challenge_method: "S256",
+        code_challenge: codeChallenge,
+      });
+
+      const response = await app.handle(new Request(`http://localhost/${testTenantConfig.id}/v1/authorize?${query.toString()}`, {
+        headers: {
+          'Cookie': `session=${sessionId}`
+        }
+      }));
+      expect(response.status).toBe(302);
+      let location = response.headers.get("Location");
+      expect(location).toBe('/test/v1/flow/login');
+    });
+
+    test("should error if auth state is invalid", async () => {
+      const sessionId = crypto.randomUUID();
+      const invalidState = { ...authenticatedState, version: 0 } as unknown as AuthState
+      await sessionService.setSession(sessionId, invalidState, testTenantConfig.oidc_clients[0].session_expiration_time)
+
+      const query = new URLSearchParams({
+        client_id: testTenantConfig.oidc_clients[0].client_id,
+        redirect_uri: testTenantConfig.oidc_clients[0].redirect_uris[0],
+        response_type: "code",
+        scope: "openid profile email",
+        state: "test",
+        code_challenge_method: "S256",
+        code_challenge: 'does-not-matter',
+      });
+
+      const response = await app.handle(new Request(`http://localhost/${testTenantConfig.id}/v1/authorize?${query.toString()}`, {
+        headers: {
+          'Cookie': `session=${sessionId}`
+        }
+      }));
+      expect(response.status).toBe(302);
+      let location = response.headers.get("Location");
+      expect(location).toBe('/test/v1/flow/error');
+    })
+
+  });
+
+  test("Render login page only if auth state is not idle", async () => {
+    const sessionId = crypto.randomUUID();
+
+    const response = await app.handle(new Request(`http://localhost/${testTenantConfig.id}/v1/flow/login`, {
       headers: {
         'Cookie': `session=${sessionId}`
       }
     }));
-    expect(response.status).toBe(302);
-    let location = response.headers.get("Location");
-    expect(location).toBe('/test/flow/v1/redirect');
-
-    // Redirect
-    const redirectResponse = await app.handle(new Request(`http://localhost${location}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': `session=${sessionId}`
-      },
-    }));
-    console.log(await redirectResponse.text());
-    expect(redirectResponse.status).toBe(302);
-    location = redirectResponse.headers.get("Location");
-    expect(location).toContain(testTenantConfig.oidc_clients[0].redirect_uris[0]);
-    const code = new URLSearchParams(location?.split('?')[1]).get('code');
-    expect(code).toBeDefined();
-
-  })
-
-  test("should only allow redirect url registered for the client", async () => {
-    const query = new URLSearchParams({
-      client_id: testTenantConfig.oidc_clients[0].client_id,
-      redirect_uri: "http://localhost/not-allowed/callback",
-      response_type: "code",
-      scope: "openid profile email",
-      state: "test",
-      code_challenge_method: "S256",
-      code_challenge: "ANYTHING",
-    });
-
-    const response = await app.handle(new Request(`http://localhost/${testTenantConfig.id}/authorize?${query.toString()}`));
     expect(response.status).toBe(400);
   });
+})
+
+test("should only allow redirect url registered for the client", async () => {
+  const query = new URLSearchParams({
+    client_id: testTenantConfig.oidc_clients[0].client_id,
+    redirect_uri: "http://localhost/not-allowed/callback",
+    response_type: "code",
+    scope: "openid profile email",
+    state: "test",
+    code_challenge_method: "S256",
+    code_challenge: "ANYTHING",
+  });
+
+  const response = await app.handle(new Request(`http://localhost/${testTenantConfig.id}/v1/authorize?${query.toString()}`));
+  expect(response.status).toBe(400);
+  expect(response.headers.get('Location')).toBeFalsy();
 });

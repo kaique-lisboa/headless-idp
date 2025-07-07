@@ -48,35 +48,33 @@ export interface ResourceAccess {
   account: RealmAccess;
 }
 
-export class KeycloakAuthService {
+export class OauthPassGrantAuthService {
 
-  private keycloakUrl: string;
-  private keycloakRealm: string;
-  private keycloakClientId: string;
-  private keycloakClientSecret: string;
+  private url: string;
+  private clientId: string;
+  private clientSecret: string;
 
   constructor(
     readonly tenant: Config['tenants'][number],
     private readonly logger = createLogger('KeycloakAuthService')
   ) {
 
-    if (tenant.auth_provider.type !== 'keycloak') {
-      throw new Error('Keycloak auth provider not configured');
+    if (tenant.auth_provider.type !== 'oauth_password_grant') {
+      throw new Error('Password grant auth provider not configured');
     }
 
-    this.keycloakUrl = tenant.auth_provider.url;
-    this.keycloakRealm = tenant.auth_provider.realm;
-    this.keycloakClientId = tenant.auth_provider.client_id;
-    this.keycloakClientSecret = tenant.auth_provider.client_secret;
+    this.url = tenant.auth_provider.url;
+    this.clientId = tenant.auth_provider.client_id;
+    this.clientSecret = tenant.auth_provider.client_secret;
   }
 
   async passwordGrant(username: string, password: string) {
-    const response = await fetch(`${this.keycloakUrl}/realms/${this.keycloakRealm}/protocol/openid-connect/token`, {
+    const response = await fetch(this.url, {
       method: 'POST',
       body: new URLSearchParams({
         grant_type: 'password',
-        client_id: this.keycloakClientId,
-        client_secret: this.keycloakClientSecret,
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
         username,
         password,
       }),

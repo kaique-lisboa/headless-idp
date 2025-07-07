@@ -10,9 +10,8 @@ tenants:
     oidc_config:
       jwt_secret: "{JWT_SECRET}"
     auth_provider:
-      type: "keycloak"
-      url: "http://localhost:8080"
-      realm: "test"
+      type: "oauth_password_grant"
+      url: "http://localhost:8080/realms/test/protocol/openid-connect/token"
       client_id: "test"
       client_secret: "{KEYCLOAK_SECRET}"
     oidc_clients:

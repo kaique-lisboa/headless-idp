@@ -1,20 +1,19 @@
-import { Html, html } from '@elysiajs/html';
-import Elysia, { status, t } from "elysia";
-import { match, P } from "ts-pattern";
 import { configMiddleware } from "@/middlewares/configMiddleware";
 import { oidcClientMiddleware } from "@/middlewares/oidcClient";
 import { userAuthState } from "@/middlewares/session/sessionMiddleware";
-import { initiateLogin } from "@/middlewares/session/sessionStateTransitions";
-import { redirectToLogin, redirectToRedirect } from "@/utils/redirects";
-import { ErrorPage } from "@/routes/pages/ErrorPage";
+import { initiateLogin, updateAuthorizeParams } from "@/middlewares/session/sessionStateTransitions";
+import { redirectToV1Error, redirectToV1Login, redirectWithError, redirectWithSuccess } from "@/utils/redirects";
+import { html } from '@elysiajs/html';
+import Elysia, { status, t } from "elysia";
+import { match, P } from "ts-pattern";
 
-export const authRouter = new Elysia()
+export const v1AuthRouter = new Elysia()
   .use(configMiddleware)
   .use(html())
-  .group('/:tenantId', app => app
+  .group('/:tenantId/v1', app => app
     .use(oidcClientMiddleware)
     .use(userAuthState)
-    .get('/authorize', async ({ authState, setAuthState, query, set, logger, oidcClient, tenant }) => {
+    .get('/authorize', async ({ requestAuthState, setAuthState, query, set, logger, oidcClient, tenant }) => {
 
       logger.info({ query }, 'Authorization initiated');
       if (!oidcClient.redirect_uris.includes(query.redirect_uri)) {
@@ -23,62 +22,46 @@ export const authRouter = new Elysia()
         })
       }
 
-      let state = authState;
+      logger.info({ step: requestAuthState.auth.step }, 'initiating login');
 
-      logger.info({ step: authState.auth.step }, 'initiating login');
-
-
-      return match(state)
-        .with({ version: 1, auth: { step: P.union('initiate_login', 'idle') } }, async () => {
+      return match(requestAuthState)
+        .with({ version: 1, auth: { step: P.union('initiate_login', 'idle') } }, async (state) => {
           await setAuthState({
             version: 1,
             auth: initiateLogin(query, tenant.id),
           }, oidcClient.session_expiration_time);
 
-          return redirectToLogin(tenant.id);
+          return match(query.prompt)
+            .with('none', () => redirectWithError(tenant, state, 'interaction_required'))
+            .otherwise(() => redirectToV1Login(tenant.id));
         })
         .with({ version: 1, auth: { step: 'user_authenticated' } }, async (authState) => {
-          await setAuthState({
-            version: 1,
-            auth: {
-              ...authState.auth,
-              state: {
-                ...authState.auth.state,
-                authorizeParams: query,
-              }
-            }
-          });
+          const newState = await setAuthState(updateAuthorizeParams(authState, query));
 
           return match(query.prompt)
             .with('login', async () => {
-              await setAuthState(
-                {
-                  version: 1,
-                  auth: initiateLogin(query, tenant.id)
-                }
-              );
-              return redirectToLogin(tenant.id);
+              return redirectToV1Login(tenant.id);
             })
-            .with('consent', () => {
-              // TODO: Implement consent account flow
-              return status(422, {
-                message: 'Unsupported prompt: consent'
-              })
-            })
-            .with('select_account', () => {
-              // TODO: Implement select account flow
-              return status(422, {
-                message: 'Unsupported prompt: select_account'
-              })
-            })
+            // .with('consent', () => {
+            //   // TODO: Implement consent account flow
+            //   return status(422, {
+            //     message: 'Unsupported prompt: consent'
+            //   })
+            // })
+            // .with('select_account', () => {
+            //   // TODO: Implement select account flow
+            //   return status(422, {
+            //     message: 'Unsupported prompt: select_account'
+            //   })
+            // })
             .otherwise(() => {
-              return redirectToRedirect(tenant.id);
+              return redirectWithSuccess(tenant, newState);
             })
         })
         .otherwise((state) => {
           logger.error({ step: state.auth.step }, 'Invalid session step or version');
           set.status = 400;
-          return <ErrorPage error="Invalid session state" />
+          return redirectToV1Error(tenant.id);
         })
 
     }, {

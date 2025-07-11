@@ -7,6 +7,7 @@ hostname: http://localhost:3000
 tenants:
   - id: "default"
     name: "Default Tenant"
+    enabled: false
     oidc_config:
       jwt_secret: "{JWT_SECRET}"
     auth_provider:
@@ -30,6 +31,7 @@ tenants:
 
   - id: "test"
     name: "Test Tenant"
+    enabled: true
     oidc_config:
       jwt_secret: "{JWT_SECRET}"
     auth_provider:

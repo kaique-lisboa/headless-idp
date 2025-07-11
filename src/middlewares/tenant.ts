@@ -10,7 +10,7 @@ export const tenantMiddleware = new Elysia({ name: 'tenant' })
   }).resolve(async ({ params: { tenantId }, config }) => {
 
     const tenant = config.tenants.find(tenant => tenant.id === tenantId);
-    if (!tenant) {
+    if (!tenant || !tenant.enabled) {
       return status(404, 'Tenant not found');
     }
 

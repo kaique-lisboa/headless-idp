@@ -16,6 +16,7 @@ const baseConfigSchema = t.Object({
   tenants: t.Array(t.Object({
     id: t.String(),
     name: t.String(),
+    enabled: t.Boolean(),
     oidc_config: t.Object({
       jwt_secret: t.String(),
     }),

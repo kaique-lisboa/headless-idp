@@ -49,8 +49,8 @@ docker-compose up -d
 > Make sure to create a realm, a client and enable password grant
 
 6. Authenticate on one of the tenants:
-- Keycloak: `http://localhost:3000/default/authorize?redirect_uri=https%3A%2F%2Fhttpbin.org%2Fget&client_id=webapp-client&scope=email&response_type=code&code_challenge=n4bQgYhMfWWaL%2BqgxVrQFaO%2FTxsrC4Is0V1sFbDwCgg%3D&code_challenge_method=S256&prompt=login`
-- local: `http://localhost:3000/test/authorize?redirect_uri=https%3A%2F%2Fhttpbin.org%2Fget&client_id=test-client&scope=email&response_type=code&code_challenge=n4bQgYhMfWWaL%2BqgxVrQFaO%2FTxsrC4Is0V1sFbDwCgg%3D&code_challenge_method=S256&prompt=login`
+- Keycloak (needs to configure the realm): `http://localhost:3000/default/v1/authorize?redirect_uri=https%3A%2F%2Fhttpbin.org%2Fget&client_id=webapp-client&scope=email&response_type=code&code_challenge=n4bQgYhMfWWaL%2BqgxVrQFaO%2FTxsrC4Is0V1sFbDwCgg%3D&code_challenge_method=S256&prompt=login`
+- test: `http://localhost:3000/test/v1/authorize?redirect_uri=https%3A%2F%2Fhttpbin.org%2Fget&client_id=test-client&scope=email&response_type=code&code_challenge=n4bQgYhMfWWaL%2BqgxVrQFaO%2FTxsrC4Is0V1sFbDwCgg%3D&code_challenge_method=S256&prompt=login`
 
 7. Insert user and pass: test@test.com:test
 

@@ -1,6 +1,6 @@
 import { OidcClientConfig, TenantConfig } from "@/core/config";
 import { AuthState, AuthStates, AuthStateV1 } from "@/middlewares/session/sessionStates";
-import { OauthOIDCService } from "@/services/oauthOidcService";
+import { OauthOIDCService } from "@/services/OauthOidcService";
 import { redirect } from "elysia";
 import { match } from "ts-pattern";
 

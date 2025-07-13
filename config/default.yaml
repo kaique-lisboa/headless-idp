@@ -29,6 +29,31 @@ tenants:
           - "email" 
           - "phone" 
 
+  - id: "cognito"
+    name: "Cognito Tenant"
+    enabled: true
+    oidc_config:
+      jwt_secret: "{JWT_SECRET}"
+    auth_provider:
+      type: "cognito"
+      user_pool_id: "{COGNITO_USER_POOL_ID}"
+      client_id: "{COGNITO_CLIENT_ID}"
+      client_secret: "{COGNITO_CLIENT_SECRET}"
+      region: "{COGNITO_REGION}"
+    oidc_clients:
+      - client_id: "webapp-client"
+        client_secret: "{WEBAPP_SECRET}"
+        redirect_uris:
+          - "https://httpbin.org/get"
+        session_expiration_time: 20000
+        code_expiration_time: 20000
+        jwt_expiration_time: 20000
+        allowed_scopes:
+          - "oidc" 
+          - "profile" 
+          - "email" 
+          - "phone" 
+
   - id: "test"
     name: "Test Tenant"
     enabled: true

@@ -1,7 +1,7 @@
 import Elysia, { status, t } from "elysia";
 import { loggerMiddleware } from "@/core/logger";
 import { oidcClientMiddleware } from "@/middlewares/oidcClient";
-import { OauthOIDCService } from "@/services/oauthOidcService";
+import { OauthOIDCService } from "@/services/OauthOidcService";
 import { tenantMiddleware } from "@/middlewares/tenant";
 
 export const v1TokenRouter = new Elysia({ name: 'tokenRouter' })

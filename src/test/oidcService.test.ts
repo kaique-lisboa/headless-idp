@@ -1,10 +1,10 @@
-import { OauthOIDCService } from "../services/oauthOidcService";
+import { OauthOIDCService } from "../services/OauthOidcService";
 import { configMock, testTenantConfig } from "./mocks/configMock.test";
 import { RedisClientType } from "@redis/client";
 import { redisClientMock, asRedisClient } from "./mocks/redisClientMock.test";
 import { authenticatedState } from "./mocks/authStateMocks.test";
 import { createHash } from "crypto";
-import { SessionService } from "@/services/sessionService";
+import { SessionService } from "@/services/SessionService";
 
 describe("oidcService", () => {
 

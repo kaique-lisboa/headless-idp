@@ -1,6 +1,6 @@
 import Elysia, { status } from "elysia";
 import { loggerMiddleware } from "@/core/logger";
-import { sessionMiddleware } from "@/services/sessionService";
+import { sessionMiddleware } from "@/services/SessionService";
 import { AuthState } from "@/middlewares/session/sessionStates";
 import { tenantMiddleware } from "@/middlewares/tenant";
 import { AppError } from "@/core/errors";
@@ -38,7 +38,7 @@ export const userAuthState = new Elysia({ name: 'userAuthState' })
       return {
         requestAuthState: await sessionService.getSession(sessionId, tenant.id),
         setAuthState: <T extends Partial<AuthState>>(state: T, expiresIn?: number) => {
-          return sessionService.setSession(sessionId, state, expiresIn) as Prettify2<AuthState & T>;;
+          return sessionService.setSession(sessionId, state, expiresIn) as Promise<Prettify2<AuthState & T>>;
         }
       }
     } catch (e) {

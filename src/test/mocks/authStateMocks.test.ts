@@ -1,6 +1,6 @@
 import { AuthState, AuthStates } from "@/middlewares/session/sessionStates";
 import { testTenantConfig } from "./configMock.test";
-import { SessionService } from '@/services/sessionService';
+import { SessionService } from '@/services/SessionService';
 
 export const idleState = SessionService.createEmptyState();
 

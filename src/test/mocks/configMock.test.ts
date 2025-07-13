@@ -4,6 +4,7 @@ import { TenantConfig, type Config } from "@/core/config";
 export const keycloakTenantConfig = {
   "id": "default",
   "name": "Default Tenant",
+  "enabled": true,
   "oidc_config": {
     "jwt_secret": "test"
   },
@@ -35,6 +36,7 @@ export const keycloakTenantConfig = {
 export const testTenantConfig = {
   "id": "test",
   "name": "Test Tenant",
+  "enabled": true,
   "oidc_config": {
     "jwt_secret": "test"
   },

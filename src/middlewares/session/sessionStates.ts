@@ -1,4 +1,5 @@
-import { PasswordGrantResponse } from "@/services/passwordGrantAuthService";
+import { CognitoAuthResponse } from "@/services/AwsCognitoService";
+import { PasswordGrantResponse } from "@/services/PasswordGrantAuthService";
 
 export type User = {
   id: string;
@@ -36,6 +37,10 @@ export type ExternalAuthState = {
   provider: 'keycloak',
   type: 'oidc',
   passwordGrant: PasswordGrantResponse,
+} | {
+  provider: 'cognito',
+  type: 'cognito',
+  cognito: CognitoAuthResponse,
 } | null
 
 export namespace AuthStates {

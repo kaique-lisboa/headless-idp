@@ -5,10 +5,11 @@ import { loggerMiddleware } from "@/core/logger";
 import { userAuthState } from "@/middlewares/session/sessionMiddleware";
 import { userAuthenticated, userCredsMatch } from "@/middlewares/session/sessionStateTransitions";
 import { tenantMiddleware } from "@/middlewares/tenant";
-import { OauthPassGrantAuthService } from "@/services/passwordGrantAuthService";
-import { redirectToV1Mfa, redirectWithSuccess } from "@/utils/redirects";
+import { OauthPassGrantAuthService } from "@/services/PasswordGrantAuthService";
+import { redirectToV1Login, redirectToV1Mfa, redirectWithError, redirectWithSuccess } from "@/utils/redirects";
 import { LoginPage } from "@/routes/pages/LoginPage";
 import { AuthState, AuthStates } from '@/middlewares/session/sessionStates';
+import { AwsCognitoService } from '@/services/AwsCognitoService';
 
 export const v1LoginRouter = new Elysia({ name: 'v1LoginRouter', })
   .use(loggerMiddleware)
@@ -104,6 +105,53 @@ export const v1LoginRouter = new Elysia({ name: 'v1LoginRouter', })
               });
 
               return redirectWithSuccess(tenant, newState);
+            })
+            .with({ auth_provider: { type: 'cognito' } }, async (tenant) => {
+              const cognitoService = new AwsCognitoService(tenant);
+              const authResponse = await cognitoService.authenticate(body.email, body.password);
+
+
+
+              let newState: AuthState = authState;
+              switch(authResponse.type) {
+                case 'authenticated':
+
+                  if(!authResponse.authenticationResult.IdToken || !authResponse.authenticationResult.AccessToken) {
+                    return redirectWithError(tenant, authState, 'No tokens returned');
+                  }
+
+                  const idTokenPayload = cognitoService.decodeIdToken(authResponse.authenticationResult.IdToken);
+                  //const accessTokenPayload = cognitoService.decodeAccessToken(authResponse.authenticationResult.AccessToken);
+                  newState = await setAuthState({
+                    auth: userCredsMatch(
+                      authState.auth,
+                      { enabled: false, type: 'none' },
+                      {
+                        email: idTokenPayload.email ?? '',
+                        name: idTokenPayload.name ?? '',
+                        id: idTokenPayload.sub,
+                        permissions: [],
+                      },
+                      {
+                        provider: 'cognito',
+                        type: 'cognito',
+                        cognito: authResponse,
+                      }
+                    )
+                  });
+
+                  newState = await setAuthState({
+                    auth: userAuthenticated(
+                      newState.auth as AuthStates.UserCredsMatch
+                    )
+                  });
+                  return redirectWithSuccess(tenant, newState as AuthState<AuthStates.UserAuthenticated>);
+                case 'challenge':
+                  return redirectToV1Mfa(tenant.id);
+                case 'error':
+                  set.status = 401;
+                  return <LoginPage state={authState.auth} error={authResponse.exception?.message ?? 'Unknown error'} />
+              }
             })
             .exhaustive()
 

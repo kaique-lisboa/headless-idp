@@ -5,7 +5,7 @@ import { redisClient as redisClientImport } from "@/core/redis";
 import { logger } from "@/core/logger";
 import { AuthState, TokenEligibleState } from "@/middlewares/session/sessionStates";
 import { Config, config as configImport } from "@/core/config";
-import { SessionService, sessionService as sessionServiceImport } from "@/services/sessionService";
+import { SessionService, sessionService as sessionServiceImport } from "@/services/SessionService";
 
 export class OauthOIDCService {
 

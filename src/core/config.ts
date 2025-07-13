@@ -7,6 +7,32 @@ import { t } from "elysia";
 
 dotenv.config();
 
+const OauthPassGrantAuthProviderSchema = t.Object({
+  type: t.Literal('oauth_password_grant'),
+  url: t.String(),
+  client_id: t.String(),
+  client_secret: t.String(),
+})
+
+const TestAuthProviderSchema = t.Object({
+  type: t.Literal('test'),
+  users: t.Array(t.Object({
+    name: t.String(),
+    username: t.String(),
+    password: t.String(),
+    email: t.String(),
+    id: t.String(),
+  })),
+})
+
+const CognitoAuthProviderSchema = t.Object({
+  type: t.Literal('cognito'),
+  region: t.String(),
+  user_pool_id: t.String(),
+  client_id: t.String(),
+  client_secret: t.String(),
+})
+
 const baseConfigSchema = t.Object({
   redis: t.Object({
     url: t.String(),
@@ -20,22 +46,11 @@ const baseConfigSchema = t.Object({
     oidc_config: t.Object({
       jwt_secret: t.String(),
     }),
-    auth_provider: t.Union([t.Object({
-      type: t.Literal('oauth_password_grant'),
-      url: t.String(),
-      client_id: t.String(),
-      client_secret: t.String(),
-    }),
-    t.Object({
-      type: t.Literal('test'),
-      users: t.Array(t.Object({
-        name: t.String(),
-        username: t.String(),
-        password: t.String(),
-        email: t.String(),
-        id: t.String(),
-      })),
-    })]),
+    auth_provider: t.Union([
+      OauthPassGrantAuthProviderSchema,
+      TestAuthProviderSchema,
+      CognitoAuthProviderSchema,
+    ]),
     oidc_clients: t.Array(t.Object({
       client_id: t.String(),
       client_secret: t.String(),
@@ -66,3 +81,5 @@ export const config = Value.Parse(baseConfigSchema, JSON.parse(configWithEnvs));
 export type Config = Static<typeof baseConfigSchema>
 export type TenantConfig = Config['tenants'][number]
 export type OidcClientConfig = TenantConfig['oidc_clients'][number]
+export type AuthProviderConfig = TenantConfig['auth_provider']
+export type AWSCognitoAuthProviderConfig = Static<typeof CognitoAuthProviderSchema>

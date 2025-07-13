@@ -2,7 +2,7 @@ import { Elysia } from 'elysia';
 import { mock, describe, test, expect, beforeEach } from 'bun:test';
 import { redisClientMock } from './mocks/redisClientMock.test';
 import { testTenantConfig } from './mocks/configMock.test';
-import { sessionService } from '@/services/sessionService';
+import { sessionService } from '@/services/SessionService';
 
 import app from "@/app";
 import { createHash } from 'crypto';
